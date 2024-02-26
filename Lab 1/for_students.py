@@ -1,7 +1,6 @@
 from data import get_data, inspect_data, split_data
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
 
 data = get_data()
 inspect_data(data)
@@ -24,11 +23,9 @@ x_test = test_data['Weight'].to_numpy()
 
 # TODO: calculate closed-form solution
 theta_best = [0, 0]
-X = np.c_[np.ones(len(x_test)), x_test]  # create a matrix with 1s and x_test
-
-beta = np.linalg.inv(X.T @ X) @ X.T @ y_test  # closed-form solution
-theta_best[0] = beta[0]
-theta_best[1] = beta[1]
+X = np.c_[np.ones(len(x_train)), x_train]  # create a matrix with 1s and x_test
+beta = np.linalg.inv(X.T @ X) @ X.T @ y_train  # closed-form solution
+theta_best = beta
 print('theta:', theta_best)
 
 # TODO: calculate error
@@ -47,55 +44,41 @@ plt.show()
 
 
 # TODO: standardization
-theta_best = [0, 0]
-y_test = test_data['MPG'].to_numpy()
-x_test = test_data['Weight'].to_numpy()
-x_test = x_test/500
-y_test = y_test/500
+x_train = (x_train - np.mean(x_test)) / np.std(x_test)
+y_train = (y_train - np.mean(y_test)) / np.std(y_test)
 
-
-# print('x_test:', x_test)
-# print('y_test:', y_test)
-
-learning_rate = 0.01
-n_iterations = 1000
-theta = np.random.randn(1, 1)
-b = np.random.randn(1, 1)
 
 # TODO: calculate theta using Batch Gradient Descent
+learning_rate = 0.05
+n_iterations = 500
+N = len(x)
+theta = np.random.rand()
+b = np.random.rand()
 
-
-def descent(x, y, theta, b, learning_rate):
+for epoch in range(n_iterations):
     dldw = 0.0
     dldb = 0.0
-    N = len(x)
-    for xi, yi in zip(x, y):
+    for xi, yi in zip(x_train, y_train):
         dldw += -2 * xi * (yi - (theta * xi + b))
         dldb += -2 * (yi - (theta * xi + b))
 
     theta -= (1/N) * dldw * learning_rate
     b -= (1/N) * dldb * learning_rate
-    return theta, b
 
 
-for epoch in range(n_iterations):
-    theta, b = descent(x_test, y_test, theta, b, learning_rate)
+# revert the standardization
+theta = theta * np.std(y_test) / np.std(x_test)
+b = b * np.std(y_test) + np.mean(y_test) - np.mean(x_test) * theta
 
-b = b * 500
-x_test = x_test * 500
-y_test = y_test * 500
+theta_best[0] = b
+theta_best[1] = theta
 
-print(f'theta: {theta}, b: {b}')
-
-theta_best[0] = b[0][0]
-theta_best[1] = theta[0][0]
-
+print('theta:', theta_best)
 
 # TODO: calculate error
-
-yhat = theta * x_test + b
-error = np.mean((y_test - yhat) ** 2)
-print('error:', error)
+y_pred = theta_best[0] + theta_best[1] * x_test
+mse = np.mean((y_test - y_pred) ** 2)
+print('MSE:', mse)
 
 # plot the regression line
 x = np.linspace(min(x_test), max(x_test), 100)
