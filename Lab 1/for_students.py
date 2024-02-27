@@ -52,27 +52,37 @@ y_train = (y_train - np.mean(y_test)) / np.std(y_test)
 learning_rate = 0.05
 n_iterations = 500
 N = len(x)
-theta = np.random.rand()
-b = np.random.rand()
+theta = np.random.rand(2, 1)
+X = np.c_[np.ones(len(x_train)), x_train]
+Y = np.c_[y_train]
 
 for epoch in range(n_iterations):
-    dldw = 0.0
-    dldb = 0.0
-    for xi, yi in zip(x_train, y_train):
-        dldw += -2 * xi * (yi - (theta * xi + b))
-        dldb += -2 * (yi - (theta * xi + b))
+    # variant 1
+    # dldw = 0.0
+    # dldb = 0.0
+    # for xi, yi in zip(x_train, y_train):
+    #     dldw += -2 * xi * (yi - (theta * xi + b))
+    #     dldb += -2 * (yi - (theta * xi + b))
+    # theta -= dldw * learning_rate
+    # b -= dldb * learning_rate
 
-    theta -= (1/N) * dldw * learning_rate
-    b -= (1/N) * dldb * learning_rate
+    # variant 2
+    # dldw = -2 * np.mean(x_train * (y_train - (theta * x_train + b)))
+    # dldb = -2 * np.mean((y_train - (theta * x_train + b)))
+    # theta -= dldw * learning_rate
+    # b -= dldb * learning_rate
+    
+    # variant 3
+    mse = X.T @ (X @ theta - Y) / N * 2
+    theta -= mse * learning_rate
 
 
+theta = np.array(theta.T)[0] # convert to 1D array
 # revert the standardization
-theta = theta * np.std(y_test) / np.std(x_test)
-b = b * np.std(y_test) + np.mean(y_test) - np.mean(x_test) * theta
+theta[1] = theta[1] * np.std(y_test) / np.std(x_test)
+theta[0] = theta[0] * np.std(y_test) + np.mean(y_test) - np.mean(x_test) * theta[1]
 
-theta_best[0] = b
-theta_best[1] = theta
-
+theta_best = theta
 print('theta:', theta_best)
 
 # TODO: calculate error
