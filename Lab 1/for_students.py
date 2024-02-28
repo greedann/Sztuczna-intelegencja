@@ -1,6 +1,7 @@
-from data import get_data, inspect_data, split_data
 import numpy as np
 import matplotlib.pyplot as plt
+
+from data import get_data, inspect_data, split_data
 
 data = get_data()
 inspect_data(data)
@@ -42,45 +43,39 @@ plt.xlabel('Weight')
 plt.ylabel('MPG')
 plt.show()
 
-
 # TODO: standardization
-x_train = (x_train - np.mean(x_test)) / np.std(x_test)
-y_train = (y_train - np.mean(y_test)) / np.std(y_test)
+x_train = (x_train - np.mean(x_train)) / np.std(x_train)
+y_train = (y_train - np.mean(y_train)) / np.std(y_train)
 
 
 # TODO: calculate theta using Batch Gradient Descent
 learning_rate = 0.05
-n_iterations = 500
+n_iterations = 50
 N = len(x)
 theta = np.random.rand(2, 1)
 X = np.c_[np.ones(len(x_train)), x_train]
 Y = np.c_[y_train]
 
 for epoch in range(n_iterations):
-    # variant 1
-    # dldw = 0.0
-    # dldb = 0.0
-    # for xi, yi in zip(x_train, y_train):
-    #     dldw += -2 * xi * (yi - (theta * xi + b))
-    #     dldb += -2 * (yi - (theta * xi + b))
-    # theta -= dldw * learning_rate
-    # b -= dldb * learning_rate
+    grad = X.T @ (X @ theta - Y) / N * 2
+    theta -= grad * learning_rate
 
-    # variant 2
-    # dldw = -2 * np.mean(x_train * (y_train - (theta * x_train + b)))
-    # dldb = -2 * np.mean((y_train - (theta * x_train + b)))
-    # theta -= dldw * learning_rate
-    # b -= dldb * learning_rate
-    
-    # variant 3
-    mse = X.T @ (X @ theta - Y) / N * 2
-    theta -= mse * learning_rate
-
+    y_pred = theta[0] + theta[1] * x_train
+    mse = np.mean((y_train - y_pred) ** 2)
+    print('MSE:', mse)
 
 theta = np.array(theta.T)[0] # convert to 1D array
-# revert the standardization
-theta[1] = theta[1] * np.std(y_test) / np.std(x_test)
-theta[0] = theta[0] * np.std(y_test) + np.mean(y_test) - np.mean(x_test) * theta[1]
+# revert the standardization for 
+# y_train = train_data['MPG'].to_numpy()
+# x_train = train_data['Weight'].to_numpy()
+# theta[1] = theta[1] * np.std(y_train) / np.std(x_train)
+# theta[0] = theta[0] * np.std(y_train) + np.mean(y_train) - np.mean(x_train) * theta[1]
+
+# standartizate test
+y_train = train_data['MPG'].to_numpy()
+x_train = train_data['Weight'].to_numpy()
+x_test = (x_test - np.mean(x_train)) / np.std(x_train)
+y_test = (y_test - np.mean(y_train)) / np.std(y_train)
 
 theta_best = theta
 print('theta:', theta_best)
